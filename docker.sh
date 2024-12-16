@@ -55,16 +55,16 @@ case "$action" in
     docker_run_it /bin/bash
     ;;
   "assemble:stable")
-    docker_run ./gradlew assembleRelease
+    docker_run ./gradlew assembleRelease --no-daemon
     ;;
   "assemble:preview")
-    docker_run ./gradlew assembleBeta
+    docker_run ./gradlew assembleBeta --no-daemon
     ;;
   "assemble:debug")
-    docker_run ./gradlew assembleDebug
+    docker_run ./gradlew assembleDebug --no-daemon
     ;;
   "clean")
-    docker_run ./gradlew clean
+    docker_run ./gradlew clean --no-daemon
     ;;
   *)
     echo "Unknown action: $action"
