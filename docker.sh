@@ -1,10 +1,11 @@
 #!/bin/bash
 
-CHECKSUM=$(sha256sum Dockerfile | awk '{print $1}' | head -c 4)
+CHECKSUM="$(sha256sum Dockerfile | awk '{print $1}' | head -c 4)"
 CHECKSUM+="$(sha256sum gradle.properties | awk '{print $1}' | head -c 4)"
 IMAGE_NAME="fl-build"
 IMAGE_TAG="$CHECKSUM"
 REPO_MOUNT="/florisboard"
+BUILD_DIR="/tmp/fl-build"
 
 read_property() {
   local version
@@ -40,12 +41,22 @@ else
     || exit 1
 fi
 
+mkdir -p "$BUILD_DIR"
+
 docker_run_it() {
-  docker run --rm -it -v "$(pwd)":"$REPO_MOUNT" -w "$REPO_MOUNT" "$IMAGE_NAME:$IMAGE_TAG" "$@"
+  docker run --rm -it \
+    -v "$(pwd)":"$REPO_MOUNT" \
+    -v "$BUILD_DIR":"$BUILD_DIR" \
+    -w "$REPO_MOUNT" \
+    "$IMAGE_NAME:$IMAGE_TAG" "$@"
 }
 
 docker_run() {
-  docker run --rm -v "$(pwd)":"$REPO_MOUNT" -w "$REPO_MOUNT" "$IMAGE_NAME:$IMAGE_TAG" "$@"
+  docker run --rm \
+  -v "$(pwd)":"$REPO_MOUNT" \
+    -v "$BUILD_DIR":"$BUILD_DIR" \
+  -w "$REPO_MOUNT" \
+  "$IMAGE_NAME:$IMAGE_TAG" "$@"
 }
 
 action="$1"
@@ -55,7 +66,7 @@ case "$action" in
     docker_run_it /bin/bash
     ;;
   "assemble:stable")
-    docker_run ./gradlew assembleRelease --no-daemon
+    docker_run ./gradlew assembleRelease --no-daemon -PbuildDir=/tmp/fl-build
     ;;
   "assemble:preview")
     docker_run ./gradlew assembleBeta --no-daemon
